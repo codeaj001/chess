@@ -88,7 +88,14 @@ export const storage = {
     // In a real implementation, we would save the move to the match history
     const match = await this.getMatchById(matchId);
     if (match) {
-      const movesArr = match.moves ? JSON.parse(match.moves) : [];
+      // Handle the case where moves might be a string array separated by commas
+      let movesArr = [];
+      try {
+        movesArr = match.moves ? JSON.parse(match.moves) : [];
+      } catch (error) {
+        // Handle the case where it's not valid JSON
+        movesArr = match.moves ? match.moves.split(",") : [];
+      }
       movesArr.push(move);
       
       await db.update(schema.chessMatches)
@@ -122,9 +129,17 @@ export const storage = {
     
     if (match) {
       // Parse moves from string to array if present
+      let movesArr = [];
+      try {
+        movesArr = match.moves ? JSON.parse(match.moves) : [];
+      } catch (error) {
+        // Handle the case where it's not valid JSON
+        movesArr = match.moves ? match.moves.split(",") : [];
+      }
+      
       return {
         ...match,
-        moves: match.moves ? JSON.parse(match.moves) : [],
+        moves: movesArr,
       };
     }
     
