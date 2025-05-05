@@ -17,7 +17,7 @@ async function generateAIMoveForStyle(aiModel: any, fen: string) {
     // with bias based on AI style
     
     // Prepare a collection of moves based on style
-    let preferredMoves = [];
+    let preferredMoves: any[] = [];
     
     switch (aiModel.style) {
       case "Aggressive":

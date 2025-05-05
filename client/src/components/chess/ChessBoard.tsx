@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { useChessMatch } from "@/hooks/useChessMatch";
@@ -124,15 +124,15 @@ export function ChessBoard({ whitePlayer, blackPlayer, matchId }: ChessBoardProp
         <ScrollArea className="bg-black/20 rounded-lg p-3 h-32">
           <div className="grid grid-cols-7 gap-2 font-mono text-sm">
             {moveHistory.map((move, index) => (
-              index % 2 === 0 ? (
-                <>
-                  <div key={`move-number-${Math.floor(index/2) + 1}`} className="text-gray-500">{Math.floor(index/2) + 1}.</div>
-                  <div key={`move-white-${index}`} className="col-span-3">{move}</div>
+              index % 2 === 0 && (
+                <React.Fragment key={`move-row-${Math.floor(index/2)}`}>
+                  <div className="text-gray-500">{Math.floor(index/2) + 1}.</div>
+                  <div className="col-span-3">{move}</div>
                   {moveHistory[index + 1] ? (
-                    <div key={`move-black-${index + 1}`} className="col-span-3">{moveHistory[index + 1]}</div>
+                    <div className="col-span-3">{moveHistory[index + 1]}</div>
                   ) : <div className="col-span-3"></div>}
-                </>
-              ) : null
+                </React.Fragment>
+              )
             ))}
           </div>
         </ScrollArea>
