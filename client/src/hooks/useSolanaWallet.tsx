@@ -261,16 +261,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const refreshBalance = async () => {
+  const refreshBalance = async (): Promise<void> => {
     if (!walletAddress) return;
     
     try {
       const bal = await getWalletBalance(walletAddress);
       setBalance(bal);
-      return bal;
     } catch (error) {
       console.error("Error refreshing balance:", error);
-      return null;
     }
   };
   

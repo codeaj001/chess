@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
-import { X } from "lucide-react";
+import { X, Wallet as WalletIcon } from "lucide-react";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 
 interface WalletModalProps {
@@ -8,12 +8,55 @@ interface WalletModalProps {
 }
 
 export function WalletModal({ open, onOpenChange }: WalletModalProps) {
-  const { connectWallet } = useSolanaWallet();
+  const { connectWallet, network, connected, walletAddress, requestAirdrop } = useSolanaWallet();
 
   const handleWalletConnect = (walletType: string) => {
     connectWallet(walletType);
     onOpenChange(false);
   };
+
+  // For already connected wallets
+  if (connected && walletAddress) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="glassmorphism border-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Wallet Details</DialogTitle>
+            <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-white">
+              <X className="h-6 w-6" />
+            </DialogClose>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-4">
+            <div className="bg-white/5 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <WalletIcon className="h-5 w-5 text-accent" />
+                <h3 className="font-medium">Your Wallet</h3>
+              </div>
+              <div className="font-mono text-sm text-gray-300 break-all">
+                {walletAddress}
+              </div>
+              <div className="mt-2 text-xs text-gray-400">
+                Connected to Solana {network}
+              </div>
+            </div>
+            
+            {network === 'devnet' && (
+              <button 
+                className="w-full flex items-center justify-center p-3 bg-accent hover:bg-accent/90 transition rounded-lg"
+                onClick={() => {
+                  requestAirdrop();
+                  onOpenChange(false);
+                }}
+              >
+                <div className="font-medium">Request 1 SOL Airdrop</div>
+              </button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -69,6 +112,10 @@ export function WalletModal({ open, onOpenChange }: WalletModalProps) {
         
         <div className="mt-4 text-xs text-gray-400">
           By connecting your wallet, you agree to the Terms of Service and Privacy Policy.
+        </div>
+        
+        <div className="mt-2 p-2 bg-yellow-500/10 text-yellow-300 text-xs rounded-md">
+          Currently operating on Solana {network}. All transactions are simulated for demonstration purposes.
         </div>
       </DialogContent>
     </Dialog>
