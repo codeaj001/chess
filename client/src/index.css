@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background-start: #1A1F2C;
+    --background-end: #2C233D;
+    
+    --accent-primary: #9b87f5;
+    --accent-secondary: #7E69AB;
+    
+    --chessboard-light: #EEEED2;
+    --chessboard-dark: #769656;
+    
+    --betting-win: #4ADE80;
+    --betting-loss: #F87171;
+    --betting-draw: #FCD34D;
+    
+    --glass: rgba(255, 255, 255, 0.05);
+    
+    --background: 232 37% 14%;
+    --foreground: 0 0% 100%;
+    
+    --card: 225 17% 15%;
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 225 17% 15%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 267 85% 75%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 267 30% 54%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 217 19% 27%;
+    --muted-foreground: 218 11% 65%;
+    
+    --accent: 267 85% 75%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 63% 75%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 240 5% 40%;
+    --input: 240 5% 50%;
+    --ring: 267 85% 75%;
+    
+    --radius: 0.5rem;
+  }
+  
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background: linear-gradient(to bottom right, var(--background-start), var(--background-end));
+    min-height: 100vh;
+    color: white;
+  }
+}
+
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #9b87f5, #7E69AB);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.chess-square-light {
+  background-color: #EEEED2;
+}
+
+.chess-square-dark {
+  background-color: #769656;
+}
+
+/* Chessboard animations */
+@keyframes movePiece {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.piece-animation {
+  animation: movePiece 0.5s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
