@@ -6,56 +6,56 @@ import { randomUUID } from "crypto";
 
 // Helper function to generate AI move based on AI style and position
 async function generateAIMoveForStyle(aiModel: any, fen: string) {
-  const chess = new Chess(fen);
-  const legalMoves = chess.moves({ verbose: true });
-  
-  if (legalMoves.length === 0) return null;
-  
-  // In a real implementation, this would use more sophisticated algorithms
-  // based on the AI's style, but for this demo we'll use simple randomization
-  // with bias based on AI style
-  
-  switch (aiModel.style) {
-    case "Aggressive":
-      // Prefer captures and checks
-      const attackingMoves = legalMoves.filter(move => move.captured || move.san.includes("+"));
-      if (attackingMoves.length > 0 && Math.random() > 0.3) {
-        return attackingMoves[Math.floor(Math.random() * attackingMoves.length)].san;
-      }
-      break;
-      
-    case "Defensive":
-      // Avoid captures and prefer moves that don't leave pieces hanging
-      const nonCapturingMoves = legalMoves.filter(move => !move.captured);
-      if (nonCapturingMoves.length > 0 && Math.random() > 0.3) {
-        return nonCapturingMoves[Math.floor(Math.random() * nonCapturingMoves.length)].san;
-      }
-      break;
-      
-    case "Positional":
-      // Prefer knight and bishop development and king safety
-      const developmentMoves = legalMoves.filter(move => 
-        (move.piece === 'n' || move.piece === 'b') || 
-        move.san === "O-O" || move.san === "O-O-O"
-      );
-      if (developmentMoves.length > 0 && Math.random() > 0.3) {
-        return developmentMoves[Math.floor(Math.random() * developmentMoves.length)].san;
-      }
-      break;
-      
-    case "Tactical":
-      // Look for forks, pins (simplified with check moves)
-      const tacticalMoves = legalMoves.filter(move => move.san.includes("+") || move.captured);
-      if (tacticalMoves.length > 0 && Math.random() > 0.3) {
-        return tacticalMoves[Math.floor(Math.random() * tacticalMoves.length)].san;
-      }
-      break;
-      
-    // Other styles would have their own biases
+  try {
+    const chess = new Chess(fen);
+    const legalMoves = chess.moves({ verbose: true });
+    
+    if (legalMoves.length === 0) return null;
+    
+    // In a real implementation, this would use more sophisticated algorithms
+    // based on the AI's style, but for this demo we'll use simple randomization
+    // with bias based on AI style
+    
+    // Prepare a collection of moves based on style
+    let preferredMoves = [];
+    
+    switch (aiModel.style) {
+      case "Aggressive":
+        // Prefer captures and checks
+        preferredMoves = legalMoves.filter(move => move.captured || move.san.includes("+"));
+        break;
+        
+      case "Defensive":
+        // Avoid captures and prefer moves that don't leave pieces hanging
+        preferredMoves = legalMoves.filter(move => !move.captured);
+        break;
+        
+      case "Positional":
+        // Prefer knight and bishop development and king safety
+        preferredMoves = legalMoves.filter(move => 
+          (move.piece === 'n' || move.piece === 'b') || 
+          move.san === "O-O" || move.san === "O-O-O"
+        );
+        break;
+        
+      case "Tactical":
+        // Look for forks, pins (simplified with check moves)
+        preferredMoves = legalMoves.filter(move => move.san.includes("+") || move.captured);
+        break;
+    }
+    
+    // Use preferred moves if available with a probability, otherwise use any legal move
+    if (preferredMoves.length > 0 && Math.random() > 0.3) {
+      return preferredMoves[Math.floor(Math.random() * preferredMoves.length)].san;
+    }
+    
+    // Default: Just return a random legal move
+    return legalMoves[Math.floor(Math.random() * legalMoves.length)].san;
+  } catch (error) {
+    console.error("Error generating AI move:", error);
+    // In case of error, return a reasonable fallback move
+    return "e4";  // A common opening move
   }
-  
-  // Default: Just return a random legal move
-  return legalMoves[Math.floor(Math.random() * legalMoves.length)].san;
 }
 
 export const storage = {
@@ -86,15 +86,18 @@ export const storage = {
     if (!move) throw new Error("No legal moves available");
     
     // In a real implementation, we would save the move to the match history
-    const match = await this.getMatchById(matchId);
-    if (match) {
+    // We need to get the raw match data to avoid parsing issues
+    const [rawMatch] = await db.select().from(schema.chessMatches)
+      .where(eq(schema.chessMatches.id, matchId));
+      
+    if (rawMatch) {
       // Handle the case where moves might be a string array separated by commas
       let movesArr = [];
       try {
-        movesArr = match.moves ? JSON.parse(match.moves) : [];
+        movesArr = rawMatch.moves ? JSON.parse(rawMatch.moves) : [];
       } catch (error) {
         // Handle the case where it's not valid JSON
-        movesArr = match.moves ? match.moves.split(",") : [];
+        movesArr = rawMatch.moves ? rawMatch.moves.split(",") : [];
       }
       movesArr.push(move);
       
