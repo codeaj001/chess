@@ -6,7 +6,7 @@ import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useChessMatch } from "@/hooks/useChessMatch";
 import { Match, BetOutcome } from "@/lib/types";
 import { placeBet, airdropSol } from "@/lib/solana";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 
 interface BettingPanelProps {
   match: Match;
@@ -14,7 +14,7 @@ interface BettingPanelProps {
 
 export function BettingPanel({ match }: BettingPanelProps) {
   const { toast } = useToast();
-  const { connected, walletAddress, refreshBalance } = useSolanaWallet();
+  const { connected, walletAddress, walletProvider, refreshBalance, network } = useSolanaWallet();
   const { betPools, isMatchLocked } = useChessMatch(match.id);
   
   const [selectedOutcome, setSelectedOutcome] = useState<BetOutcome | null>(null);
