@@ -40,7 +40,7 @@ export type AiModel = typeof aiModels.$inferSelect;
 // Chess matches
 export const chessMatches = pgTable("chess_matches", {
   id: serial("id").primaryKey(),
-  solana_match_id: integer("solana_match_id").notNull(),
+  solana_match_id: integer("solana_match_id"), // Made optional
   white_bot_id: integer("white_bot_id").notNull().references(() => aiModels.id),
   black_bot_id: integer("black_bot_id").notNull().references(() => aiModels.id),
   match_pubkey: text("match_pubkey"),
@@ -66,7 +66,7 @@ export type ChessMatch = typeof chessMatches.$inferSelect;
 export const bets = pgTable("bets", {
   id: uuid("id").primaryKey(),
   match_id: integer("match_id").notNull().references(() => chessMatches.id),
-  solana_match_id: integer("solana_match_id").notNull(),
+  solana_match_id: integer("solana_match_id"), // Made optional
   user_wallet: text("user_wallet").notNull(),
   amount: real("amount").notNull(),
   outcome: text("outcome").notNull(), // White, Black, Draw
