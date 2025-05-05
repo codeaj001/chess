@@ -15,8 +15,13 @@ export function WalletButton() {
     balance, 
     network,
     walletProvider,
-    requestAirdrop
+    requestAirdrop,
+    detectedWallets
   } = useSolanaWallet();
+
+  // Get installed wallets count
+  const installedWallets = detectedWallets.filter(w => w.installed && w.type !== 'demo');
+  const hasInstalledWallets = installedWallets.length > 0;
 
   if (!connected) {
     return (
@@ -26,7 +31,11 @@ export function WalletButton() {
           onClick={() => setWalletModalOpen(true)}
         >
           <Wallet className="h-4 w-4" />
-          <span className="hidden sm:inline">Connect Wallet</span>
+          <span className="hidden sm:inline">
+            {hasInstalledWallets 
+              ? `Connect (${installedWallets.length})` 
+              : "Connect Wallet"}
+          </span>
           <span className="inline sm:hidden">Wallet</span>
         </Button>
         <WalletModal open={walletModalOpen} onOpenChange={setWalletModalOpen} />

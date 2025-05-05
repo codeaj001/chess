@@ -7,6 +7,15 @@ import { Connection, clusterApiUrl, PublicKey } from '@solana/web3.js';
 const SOLANA_NETWORK = 'devnet';
 const connection = new Connection(clusterApiUrl(SOLANA_NETWORK));
 
+// Define the available wallet types
+export interface WalletInfo {
+  name: string;
+  icon: string;
+  type: string;
+  installed: boolean;
+  provider?: any;
+}
+
 interface WalletContextType {
   connected: boolean;
   walletAddress: string | null;
@@ -17,9 +26,32 @@ interface WalletContextType {
   refreshBalance: () => Promise<void>;
   network: string;
   requestAirdrop: () => Promise<void>;
+  detectedWallets: WalletInfo[];
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
+
+// Define available wallets with their metadata
+const availableWallets: WalletInfo[] = [
+  {
+    name: 'Phantom',
+    icon: 'https://phantom.app/img/phantom-logo.svg',
+    type: 'phantom',
+    installed: false
+  },
+  {
+    name: 'Solflare',
+    icon: 'https://solflare.com/assets/logo.svg',
+    type: 'solflare',
+    installed: false
+  },
+  {
+    name: 'Demo Wallet',
+    icon: '',
+    type: 'demo',
+    installed: true
+  }
+];
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -27,16 +59,102 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletProvider, setWalletProvider] = useState<any | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [detectedWallets, setDetectedWallets] = useState<WalletInfo[]>([...availableWallets]);
 
-  // Check if wallet is already connected on mount
+  // Check for available wallets and any existing connections
   useEffect(() => {
-    const checkWalletConnection = async () => {
+    const detectWallets = async () => {
       try {
-        // Check if any existing connection from localStorage
+        // Check for existing connection from localStorage
         const savedWalletAddress = localStorage.getItem('walletAddress');
         const savedWalletType = localStorage.getItem('walletType');
         
-        if (savedWalletAddress) {
+        // Make a copy of available wallets
+        const wallets = [...availableWallets];
+        
+        // Detect Phantom wallet
+        try {
+          // @ts-ignore - Phantom injects solana into window
+          const phantomProvider = window.solana;
+          if (phantomProvider?.isPhantom) {
+            // Update wallet info to show it's installed
+            const phantomIndex = wallets.findIndex(w => w.type === 'phantom');
+            if (phantomIndex >= 0) {
+              wallets[phantomIndex] = {
+                ...wallets[phantomIndex],
+                installed: true,
+                provider: phantomProvider
+              };
+              
+              // If wallet is connected and we have permission
+              if (phantomProvider.isConnected) {
+                const address = phantomProvider.publicKey.toString();
+                setWalletAddress(address);
+                setConnected(true);
+                setWalletProvider({
+                  type: 'phantom',
+                  provider: phantomProvider,
+                  isExtension: true
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('walletAddress', address);
+                localStorage.setItem('walletType', 'phantom');
+                
+                // Get wallet balance
+                const bal = await getWalletBalance(address);
+                setBalance(bal);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error detecting Phantom wallet:", error);
+        }
+        
+        // Detect Solflare wallet
+        try {
+          // @ts-ignore - Solflare injects solflare into window
+          const solflareProvider = window.solflare;
+          if (solflareProvider?.isSolflare) {
+            // Update wallet info to show it's installed
+            const solflareIndex = wallets.findIndex(w => w.type === 'solflare');
+            if (solflareIndex >= 0) {
+              wallets[solflareIndex] = {
+                ...wallets[solflareIndex],
+                installed: true,
+                provider: solflareProvider
+              };
+              
+              // If wallet is connected and we have permission
+              if (solflareProvider.isConnected && !connected) {
+                const address = solflareProvider.publicKey.toString();
+                setWalletAddress(address);
+                setConnected(true);
+                setWalletProvider({
+                  type: 'solflare',
+                  provider: solflareProvider,
+                  isExtension: true
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('walletAddress', address);
+                localStorage.setItem('walletType', 'solflare');
+                
+                // Get wallet balance
+                const bal = await getWalletBalance(address);
+                setBalance(bal);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error detecting Solflare wallet:", error);
+        }
+        
+        // Update detected wallets
+        setDetectedWallets(wallets);
+        
+        // If we have a saved wallet but no active connection, try to restore from local storage
+        if (savedWalletAddress && !connected) {
           setWalletAddress(savedWalletAddress);
           setConnected(true);
           
@@ -44,7 +162,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             setWalletProvider({ type: savedWalletType, address: savedWalletAddress });
           }
           
-          // Get actual wallet balance from Solana blockchain
+          // Get wallet balance
           try {
             const bal = await getWalletBalance(savedWalletAddress);
             setBalance(bal);
@@ -53,181 +171,99 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             setBalance(null);
           }
         }
-        
-        // Also try to detect browser wallet extensions
-        const detectPhantomWallet = async () => {
-          try {
-            // @ts-ignore - Phantom injects solana into window
-            const provider = window.solana;
-            if (provider?.isPhantom) {
-              setWalletProvider({ 
-                type: 'phantom', 
-                provider,
-                isExtension: true
-              });
-              
-              // If we have permissions already, get the address
-              if (provider.isConnected) {
-                const address = provider.publicKey.toString();
-                setWalletAddress(address);
-                setConnected(true);
-                localStorage.setItem('walletAddress', address);
-                localStorage.setItem('walletType', 'phantom');
-                
-                const bal = await getWalletBalance(address);
-                setBalance(bal);
-              }
-            }
-          } catch (error) {
-            console.error("Error detecting Phantom wallet:", error);
-          }
-        };
-        
-        // Try to detect Solflare wallet extension
-        const detectSolflareWallet = async () => {
-          try {
-            // @ts-ignore - Solflare injects solflare into window
-            const provider = window.solflare;
-            if (provider?.isSolflare) {
-              setWalletProvider({ 
-                type: 'solflare', 
-                provider,
-                isExtension: true
-              });
-              
-              // If we have permissions already, get the address
-              if (provider.isConnected) {
-                const address = provider.publicKey.toString();
-                setWalletAddress(address);
-                setConnected(true);
-                localStorage.setItem('walletAddress', address);
-                localStorage.setItem('walletType', 'solflare');
-                
-                const bal = await getWalletBalance(address);
-                setBalance(bal);
-              }
-            }
-          } catch (error) {
-            console.error("Error detecting Solflare wallet:", error);
-          }
-        };
-        
-        // Execute wallet detection
-        await detectPhantomWallet();
-        await detectSolflareWallet();
-        
       } catch (error) {
-        console.error("Error checking wallet connection:", error);
+        console.error("Error detecting wallets:", error);
       }
     };
-
-    checkWalletConnection();
+    
+    detectWallets();
   }, []);
 
   const connectWallet = async (walletType: string) => {
     try {
-      // Try connecting to real wallet if present
-      if (walletType === 'phantom') {
-        // @ts-ignore - Phantom injects solana into window
-        const provider = window.solana;
-        if (provider?.isPhantom) {
-          try {
-            // Request connection to the wallet
-            await provider.connect();
-            const address = provider.publicKey.toString();
-            
-            setWalletAddress(address);
-            setConnected(true);
-            setWalletProvider({ 
-              type: 'phantom', 
-              provider,
-              isExtension: true 
-            });
-            
-            localStorage.setItem('walletAddress', address);
-            localStorage.setItem('walletType', 'phantom');
-            
-            // Get wallet balance
-            const bal = await getWalletBalance(address);
-            setBalance(bal);
-            
-            toast({
-              title: "Wallet Connected",
-              description: `Connected with Phantom wallet (${address.substring(0, 4)}...${address.substring(address.length - 4)})`,
-            });
-            
-            return;
-          } catch (err) {
-            console.error("Error connecting to Phantom wallet:", err);
-            // Fall through to mock wallet if Phantom connection fails
-          }
-        }
-      } else if (walletType === 'solflare') {
-        // @ts-ignore - Solflare injects solflare into window
-        const provider = window.solflare;
-        if (provider?.isSolflare) {
-          try {
-            // Request connection to the wallet
-            await provider.connect();
-            const address = provider.publicKey.toString();
-            
-            setWalletAddress(address);
-            setConnected(true);
-            setWalletProvider({ 
-              type: 'solflare', 
-              provider,
-              isExtension: true 
-            });
-            
-            localStorage.setItem('walletAddress', address);
-            localStorage.setItem('walletType', 'solflare');
-            
-            // Get wallet balance
-            const bal = await getWalletBalance(address);
-            setBalance(bal);
-            
-            toast({
-              title: "Wallet Connected",
-              description: `Connected with Solflare wallet (${address.substring(0, 4)}...${address.substring(address.length - 4)})`,
-            });
-            
-            return;
-          } catch (err) {
-            console.error("Error connecting to Solflare wallet:", err);
-            // Fall through to mock wallet if Solflare connection fails
-          }
+      // Find the wallet in the detected wallets list
+      const walletInfo = detectedWallets.find(w => w.type === walletType);
+      
+      if (!walletInfo) {
+        throw new Error(`Wallet type '${walletType}' not found`);
+      }
+      
+      // If it's an installed browser extension, try to connect
+      if (walletInfo.installed && walletInfo.provider && walletType !== 'demo') {
+        try {
+          const provider = walletInfo.provider;
+          // Connect to the wallet
+          await provider.connect();
+          
+          // Get the wallet address
+          const address = provider.publicKey.toString();
+          
+          // Update state
+          setWalletAddress(address);
+          setConnected(true);
+          setWalletProvider({
+            type: walletType,
+            provider,
+            isExtension: true
+          });
+          
+          // Save to localStorage
+          localStorage.setItem('walletAddress', address);
+          localStorage.setItem('walletType', walletType);
+          
+          // Get wallet balance
+          const bal = await getWalletBalance(address);
+          setBalance(bal);
+          
+          toast({
+            title: "Wallet Connected",
+            description: `Connected with ${walletInfo.name} wallet (${address.substring(0, 4)}...${address.substring(address.length - 4)})`,
+          });
+          
+          return;
+        } catch (err) {
+          console.error(`Error connecting to ${walletInfo.name} wallet:`, err);
+          toast({
+            title: `${walletInfo.name} Connection Failed`,
+            description: err instanceof Error ? err.message : "Could not connect to wallet",
+            variant: "destructive"
+          });
+          // Don't fall through to demo wallet if user explicitly rejected connection
+          return;
         }
       }
       
-      // If no browser wallet or connection failed, use mock wallet for demonstration
-      // Generate a mock Solana address (base58 encoded)
-      const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-      let mockAddress = '';
-      for (let i = 0; i < 44; i++) {
-        mockAddress += characters.charAt(Math.floor(Math.random() * characters.length));
+      // If we're here, either it's a demo wallet or the extension connection failed
+      if (walletType === 'demo' || !walletInfo.installed) {
+        // Generate a mock Solana address (base58 encoded)
+        const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+        let mockAddress = '';
+        for (let i = 0; i < 44; i++) {
+          mockAddress += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        setWalletAddress(mockAddress);
+        setConnected(true);
+        
+        // Set a mock wallet provider for demonstration
+        setWalletProvider({ 
+          type: walletType, 
+          address: mockAddress,
+          isMock: true 
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('walletAddress', mockAddress);
+        localStorage.setItem('walletType', walletType);
+        
+        // Set a mock balance
+        setBalance(5.0);
+        
+        toast({
+          title: "Demo Wallet Connected",
+          description: `Connected with simulated wallet for demonstration`,
+        });
       }
-      
-      setWalletAddress(mockAddress);
-      setConnected(true);
-      
-      // Set a mock wallet provider for demonstration
-      setWalletProvider({ 
-        type: walletType, 
-        address: mockAddress,
-        isMock: true 
-      });
-      
-      // Save to localStorage to persist the "connection"
-      localStorage.setItem('walletAddress', mockAddress);
-      localStorage.setItem('walletType', walletType);
-      
-      // Set a mock balance
-      setBalance(5.0);
-      
-      toast({
-        title: "Demo Wallet Connected",
-        description: `Connected with simulated ${walletType} wallet for demonstration`,
-      });
     } catch (error) {
       console.error("Error connecting wallet:", error);
       toast({
@@ -319,7 +355,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       disconnectWallet,
       refreshBalance,
       network: SOLANA_NETWORK,
-      requestAirdrop
+      requestAirdrop,
+      detectedWallets
     }}>
       {children}
     </WalletContext.Provider>
