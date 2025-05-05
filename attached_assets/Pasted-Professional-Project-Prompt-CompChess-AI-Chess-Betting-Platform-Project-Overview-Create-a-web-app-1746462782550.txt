@@ -1,0 +1,242 @@
+Professional Project Prompt: CompChess - AI Chess Betting Platform
+Project Overview
+Create a web application where users can watch AI chess models compete against each other and place bets using Solana cryptocurrency. The platform features automated matchmaking between various AI models with different playing styles, providing an engaging spectator experience and betting opportunities.
+
+Core Features
+1. Automated AI Chess Matchmaking
+Implement a system that automatically schedules and executes chess matches between AI models
+Create diverse AI models with different playing styles (aggressive, defensive, positional, tactical)
+Include ELO ratings for each AI model to provide skill context
+Support different match types (regular, tournament, showcase)
+Auto-start matches without requiring user intervention
+Allow toggling of auto-play functionality
+2. Interactive Chess Board
+Display a visually appealing chess board showing real-time moves
+Support traditional green (#769656) and cream (#EEEED2) squares
+Add visual indicators for active games, check, checkmate, and game completion
+Include animation for piece movement with appropriate timing
+Optimize for both desktop and mobile viewing
+3. Solana Betting System
+Enable wallet connection through multiple providers (Phantom, Solflare, etc.)
+Support betting on White win, Black win, or Draw outcomes
+Calculate and display odds based on betting pools
+Facilitate secure transaction processing for both placing bets and distributing winnings
+Include an airdrop function for testing on Solana devnet
+4. Match Information and Selection
+Create an interface to display upcoming, active, and completed matches
+Show detailed AI model information including playing style, strengths, and ELO rating
+Allow users to select matches they want to watch or bet on
+Display betting pools and odds for each match
+5. User Interface
+Implement a three-column layout with match info, chess board, and betting panel
+Design a dark theme with purple/blue accents and glassmorphism effects
+Build a responsive design that adapts to desktop, tablet, and mobile
+Create consistent component styling with shadcn/ui
+UI/UX Design
+Color Palette
+Background: Gradient from #1A1F2C to #2C233D
+Primary Accent: #9b87f5 (Purple)
+Secondary Accent: #7E69AB (Lighter Purple)
+Chess Board: Green (#769656) and Cream (#EEEED2)
+Text: White and light gray variations for readability
+Betting UI: Green/red accents for win/loss indicators
+Layout Structure
+Header
+
+Logo/brand name with gradient text effect
+Wallet connection button
+Network indicator (Devnet)
+Current time display
+Main Content (Three-Column Layout on Desktop)
+
+Left Column: Game information, AI details, betting history
+Center Column: Chess board with status overlays
+Right Column: Betting panel and match scheduling
+Mobile: Stacked layout with tabs for betting and schedule
+Chess Board
+
+Central focus of the application
+Responsive sizing based on viewport
+Status overlays for game state
+Subtle highlighting for the active game
+Game Information Panel
+
+Match details (AI players, time controls)
+Game status indicators
+Betting pool information
+AI model details with visual style indicators
+Betting Panel
+
+Selection buttons for White/Black/Draw
+Bet amount input with quick-set buttons
+Odds and potential payout calculator
+Devnet SOL airdrop button for testing
+Match Selection
+
+List view of scheduled and in-progress matches
+Tournament bracket visualization when applicable
+Auto-play toggle with status indicator
+Schedule additional matches functionality
+Footer
+
+Copyright information
+Links to documentation/information
+Technical Requirements
+Frontend Framework
+React with TypeScript
+React Router for navigation
+Vite for build and development
+UI Components and Styling
+Tailwind CSS for utility-first styling
+Shadcn/UI component library for consistent UI elements
+Lucide React for icon system
+Responsiveness through mobile-first approach
+Custom animations for state transitions
+Chess Implementation
+Chess.js for game logic and validation
+React-chessboard for board visualization
+Custom AI move generation algorithms
+Timed move execution with appropriate delays
+Blockchain Integration
+Solana Web3.js for blockchain interaction
+Wallet adapter for connecting various wallet types
+Transaction handling for bets and payouts
+Devnet implementation for testing purposes
+State Management
+React Context API for global state
+Custom hooks for specific functionality (useLiveGame, useChessContext, useSolanaChess)
+Optimized rendering with useCallback and useMemo
+Data Persistence
+Supabase for database requirements
+Tables for matches, bets, and users
+Real-time data syncing
+Row-level security policies
+Database Schema
+Tables
+chess_matches
+
+id (UUID, primary key)
+solana_match_id (Integer)
+white_bot_id (Integer)
+black_bot_id (Integer)
+match_pubkey (Text)
+status (Text: 'Scheduled', 'InProgress', 'Completed')
+start_time (Timestamp)
+end_time (Timestamp, nullable)
+result (Text, nullable)
+white_pool (Integer)
+black_pool (Integer)
+draw_pool (Integer)
+bets_locked (Boolean)
+bets
+
+id (UUID, primary key)
+match_id (UUID, foreign key to chess_matches)
+solana_match_id (Integer)
+user_wallet (Text)
+amount (Integer)
+outcome (Text: 'White', 'Black', 'Draw')
+transaction_signature (Text, nullable)
+solana_bet_pubkey (Text, nullable)
+timestamp (Timestamp)
+status (Text: 'Active', 'Won', 'Lost')
+claimed (Boolean)
+payout (Integer, nullable)
+AI Models System
+Model Characteristics
+Playing Style
+
+Aggressive: Prioritizes attack and immediate threats
+Defensive: Focuses on solid structures and counterattack
+Positional: Emphasizes long-term advantages and piece placement
+Tactical: Looks for combinations and sacrifices
+Classical: Follows traditional chess principles
+Neural: Uses patterns and adaptations (simulated AI neural network behavior)
+Mixed: Balanced approach adapting to position requirements
+Attributes
+
+ELO Rating: Numerical skill rating from 1200-2800
+Opening Preferences: Specific openings the AI favors
+Middlegame Strength: Rating from 1-5
+Endgame Strength: Rating from 1-5
+Premium/Free Status: Differentiate between model tiers
+Model Visualization
+
+Custom styling for White and Black AI models
+Visual strength indicators for specific phases
+ELO and style prominently displayed
+Matchmaking Logic
+Regular Matches
+
+Balance matches by ELO (within 300 points)
+Create interesting stylistic matchups (aggressive vs. defensive)
+Schedule with appropriate time gaps
+Tournaments
+
+Create bracket-style elimination tournaments
+Seed by ELO rating
+Track advancement through rounds
+Style Showcases
+
+Highlight contrasting playing styles
+Include descriptive analysis of expected game flow
+Feature premium AI models in special showcases
+Implementation Details
+Chess Game Simulation
+Implement move generation based on AI style profiles
+Add appropriate delays between moves to simulate thinking time
+Increase delays for complex positions or critical moments
+Handle edge cases (threefold repetition, fifty-move rule)
+Provide move annotation in standard chess notation
+Betting System Implementation
+Calculate odds based on current betting pools
+Apply small platform fee (5%)
+Manage transaction signing and confirmation
+Handle error states and provide clear feedback
+Display bet history with outcome status
+Mobile Responsiveness
+Use responsive grid system for layout changes
+Implement tab navigation for mobile screens
+Ensure touch-friendly UI elements
+Optimize chess board size for different viewports
+Test on various device sizes and orientations
+User Experience Enhancements
+Add toast notifications for important events
+Implement loading states with appropriate animations
+Provide clear feedback for blockchain transactions
+Add sound effects for moves and game state changes (optional, muted by default)
+Include visual cues for time control and game progress
+Development Roadmap
+Foundation Setup
+
+Create React/TypeScript project with Vite
+Set up Tailwind CSS and shadcn/ui
+Implement basic layout structure
+Create essential context providers
+Chess Engine Implementation
+
+Integrate chess.js and react-chessboard
+Implement basic game state management
+Create AI model profiles and move generation
+Matchmaking System
+
+Build automated match scheduling system
+Implement match execution logic
+Create interface for match selection and viewing
+Solana Integration
+
+Set up wallet connection functionality
+Implement bet placement and processing
+Create transaction handling and confirmation
+UI Refinement
+
+Polish component styling
+Improve responsiveness across devices
+Add animations and transitions
+Implement toast notifications
+Testing and Optimization
+
+Test on various devices and browsers
+Optimize performance and reduce bundle size
+Fix bugs and edge cases
+User experience testing
