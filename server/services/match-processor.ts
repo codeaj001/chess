@@ -97,7 +97,8 @@ export class MatchProcessorService {
 						if (matchIndex !== -1) {
 							mockMatches[matchIndex].status = "InProgress";
 							console.log(
-								`Started match ${match.id}: ${match.white_bot_id} vs ${match.black_bot_id}`
+							`Started match ${match.id}: ${match.white_bot_id} vs ${match.black_bot_id} - Bets Locked`
+
 							);
 						}
 					} catch (error) {

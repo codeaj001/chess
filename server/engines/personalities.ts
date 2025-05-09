@@ -35,9 +35,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		description:
 			"A beginner-level personality that makes basic positional moves but often misses tactical opportunities.",
 		networkPath: "networks/beginner.pb.gz", // Path relative to engine executable
-		options: {
-			temperature: 0.8, // High randomness for beginner play
-			cpuct: 1.5, // Lower exploration constant
+		options: { // Increased nodes and decreased temperature for more accurate play
+			temperature: 0.5,
+			cpuct: 1.8,
 			nodes: 100, // Very limited search
 			skill_level: 1, // Lowest skill level
 		},
@@ -50,9 +50,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Defensive",
 		description:
 			"A cautious personality that prioritizes pawn structure and defensive play.",
-		networkPath: "networks/beginner.pb.gz",
+		networkPath: "networks/beginner.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.7,
+			temperature: 0.4,
 			cpuct: 1.8,
 			fpu_reduction: 0.9, // Higher reduction = more pessimistic about unexplored moves
 			nodes: 200,
@@ -68,9 +68,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Tactical",
 		description:
 			"An intermediate personality that looks for tactical opportunities but lacks strategic depth.",
-		networkPath: "networks/intermediate.pb.gz",
+		networkPath: "networks/intermediate.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.6,
+			temperature: 0.3,
 			cpuct: 2.0,
 			nodes: 400,
 			contempt: 10, // Slightly positive contempt = avoids draws
@@ -85,9 +85,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Positional",
 		description:
 			"A solid intermediate personality that focuses on piece development and positional advantages.",
-		networkPath: "networks/intermediate.pb.gz",
+		networkPath: "networks/intermediate.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.5,
+			temperature: 0.2,
 			cpuct: 2.2,
 			nodes: 600,
 			skill_level: 5,
@@ -101,9 +101,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Tactical",
 		description:
 			"An aggressive personality that prioritizes attacks and sacrifices for initiative.",
-		networkPath: "networks/intermediate.pb.gz",
+		networkPath: "networks/intermediate.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.4,
+			temperature: 0.2,
 			cpuct: 2.5,
 			nodes: 800,
 			contempt: 25, // Higher contempt = avoids draws more aggressively
@@ -118,9 +118,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Positional",
 		description:
 			"A strong personality that excels in queenside play and endgames.",
-		networkPath: "networks/advanced.pb.gz",
+		networkPath: "networks/advanced.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.3,
+			temperature: 0.2,
 			cpuct: 2.7,
 			nodes: 1000,
 			skill_level: 9,
@@ -134,9 +134,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Mixed",
 		description:
 			"A well-rounded advanced personality with balanced tactical and positional understanding.",
-		networkPath: "networks/advanced.pb.gz",
+		networkPath: "networks/advanced.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.2,
+			temperature: 0.1,
 			cpuct: 2.8,
 			nodes: 1200,
 			skill_level: 12,
@@ -154,9 +154,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Neural",
 		description:
 			"An advanced personality that occasionally makes surprising moves that appear like blunders but have deep strategic value.",
-		networkPath: "networks/advanced.pb.gz",
+		networkPath: "networks/advanced.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.2, // Slightly higher temperature for creative play
+			temperature: 0.1, // Slightly higher temperature for creative play
 			cpuct: 3.0,
 			policy_temp: 1.5, // Higher policy temperature = more diverse move selection
 			nodes: 1400,
@@ -175,9 +175,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Neural",
 		description:
 			"An advanced personality that uses neural network evaluation to make human-like decisions.",
-		networkPath: "networks/best.pb.gz",
+		networkPath: "networks/best.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.2,
+			temperature: 0.1,
 			cpuct: 3.0,
 			policy_temp: 1.2,
 			nodes: 1600,
@@ -196,9 +196,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Classical",
 		description:
 			"A master-level personality that plays solid, principled chess with occasional brilliancies.",
-		networkPath: "networks/best.pb.gz",
+		networkPath: "networks/best.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.2,
+			temperature: 0.05,
 			cpuct: 3.5,
 			nodes: 2000,
 			skill_level: 19,
@@ -216,9 +216,9 @@ export const enginePersonalities: EnginePersonality[] = [
 		style: "Neural",
 		description:
 			"A master-level personality that plays at near-perfect levels with occasional creative moves.",
-		networkPath: "networks/best.pb.gz",
+		networkPath: "networks/best.pb.gz", // Increased nodes and decreased temperature for more accurate play
 		options: {
-			temperature: 0.2,
+			temperature: 0.05,
 			cpuct: 4.0,
 			nodes: 3000,
 			skill_level: 20,

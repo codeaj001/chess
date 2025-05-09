@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Match, MatchType, MatchStatus } from "@/lib/types";
 import { formatDistanceToNow, format, isAfter, isBefore, parseISO } from "date-fns";
 import { ChevronRight, Search, Clock, Trophy, Calendar } from "lucide-react";
+import CountdownTimer from "./CountdownTimer"; // Import the CountdownTimer
 
 interface MatchCardProps {
   match: Match;
@@ -48,10 +49,10 @@ function MatchCard({ match, onClick }: MatchCardProps) {
   const { data: blackAI } = useQuery({
     queryKey: [`/api/ai/${match.black_bot_id}`],
   });
-  
+
   let timeDisplay = "";
   let timeIcon = null;
-  
+
   if (match.status === "Scheduled") {
     timeIcon = <Calendar className="h-4 w-4 mr-1" />;
     const startTime = parseISO(match.start_time);
@@ -65,13 +66,17 @@ function MatchCard({ match, onClick }: MatchCardProps) {
     timeDisplay = "In Progress";
   } else if (match.status === "Completed") {
     timeIcon = <Trophy className="h-4 w-4 mr-1" />;
-    timeDisplay = match.result 
-      ? `${match.result} won` 
+    timeDisplay = match.result
+      ? `${match.result} won`
       : "Completed";
   }
-  
+
+  const handleBetsLocked = () => {
+    console.log(`Bets locked for match ${match.id}`);
+  };
+
   return (
-    <div 
+    <div
       className="p-4 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer"
       onClick={() => onClick(match.id)}
     >
@@ -81,8 +86,23 @@ function MatchCard({ match, onClick }: MatchCardProps) {
             {whiteAI?.name ?? 'Loading...'} vs {blackAI?.name ?? 'Loading...'}
           </span>
           <div className="flex items-center text-xs text-gray-400 mt-1">
-            {timeIcon}
-            <span>{timeDisplay}</span>
+          {/* This div is to separate the time icon from the timer  */}
+            <div className="flex items-center">
+              {timeIcon}
+              <span>{timeDisplay}</span>
+            </div>
+            {/* Display CountdownTimer if match is Scheduled */}
+            {match.status === "Scheduled" && (
+              <CountdownTimer
+                startTime={match.start_time}
+                betsLocked={match.bets_locked}
+                onBetsLocked={handleBetsLocked}
+              />
+            )}
+             {/* Display "Bets are Locked" if bets are locked and match is Scheduled */}
+             {match.status === "Scheduled" && match.bets_locked && (
+                  <p className="text-xs text-red-500 mt-1">Bets are Locked</p>
+             )}
           </div>
         </div>
         <div className="flex flex-col items-end">
@@ -94,18 +114,18 @@ function MatchCard({ match, onClick }: MatchCardProps) {
           </Badge>
         </div>
       </div>
-      
+
       <div className="flex justify-between items-center text-xs text-gray-400 mt-2">
         <div className="flex items-center">
           <span>ELO {whiteAI?.elo ?? '?'} / {blackAI?.elo ?? '?'}</span>
         </div>
         <span>{match.time_control}</span>
       </div>
-      
+
       {match.status === "InProgress" && (
         <div className="mt-2 flex justify-between items-center">
           <div className="flex-1 bg-white/10 h-1 rounded-full overflow-hidden">
-            <div 
+            <div
               className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full"
               style={{ width: `${Math.min(100, (match.moves?.length || 0) * 2)}%` }}
             />
@@ -123,32 +143,32 @@ export function MatchList({ onSelectMatch }: { onSelectMatch: (matchId: number) 
   const [tab, setTab] = useState<"active" | "upcoming" | "completed" | "all">("active");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
-  
+
   // Fetch matches based on current tab
   const { data: activeMatches, isLoading: isLoadingActive } = useQuery({
     queryKey: ["/api/matches/active"],
     enabled: tab === "active" || tab === "all",
   });
-  
+
   const { data: upcomingMatches, isLoading: isLoadingUpcoming } = useQuery({
     queryKey: ["/api/matches/upcoming", 20],
     enabled: tab === "upcoming" || tab === "all",
   });
-  
+
   const { data: completedMatches, isLoading: isLoadingCompleted } = useQuery({
     queryKey: ["/api/matches/by-status/Completed"],
     enabled: tab === "completed" || tab === "all",
   });
-  
+
   const { data: allMatches, isLoading: isLoadingAll } = useQuery({
     queryKey: ["/api/matches/all"],
     enabled: tab === "all",
   });
-  
+
   // Determine which matches to display based on current tab
   let displayMatches: Match[] = [];
   let isLoading = false;
-  
+
   switch (tab) {
     case "active":
       displayMatches = activeMatches || [];
@@ -167,27 +187,27 @@ export function MatchList({ onSelectMatch }: { onSelectMatch: (matchId: number) 
       isLoading = isLoadingAll;
       break;
   }
-  
+
   // Apply filters
   let filteredMatches = displayMatches;
-  
+
   // Apply search filter if query exists
   if (searchQuery) {
     // We can't directly filter by AI name since we don't have that data yet
     // In a real app, you'd want to fetch this data or have it included in the match data
-    filteredMatches = filteredMatches.filter(match => 
+    filteredMatches = filteredMatches.filter(match =>
       match.id.toString().includes(searchQuery) ||
       match.match_type.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
-  
+
   // Apply match type filter
   if (filterType !== "all") {
-    filteredMatches = filteredMatches.filter(match => 
+    filteredMatches = filteredMatches.filter(match =>
       match.match_type === filterType
     );
   }
-  
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -220,7 +240,7 @@ export function MatchList({ onSelectMatch }: { onSelectMatch: (matchId: number) 
             </SelectContent>
           </Select>
         </div>
-        
+
         <Tabs value={tab} onValueChange={(value) => setTab(value as any)}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="active">Active</TabsTrigger>
@@ -228,7 +248,7 @@ export function MatchList({ onSelectMatch }: { onSelectMatch: (matchId: number) 
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value={tab} className="mt-4">
             {isLoading ? (
               <div className="flex items-center justify-center h-40">
@@ -237,9 +257,9 @@ export function MatchList({ onSelectMatch }: { onSelectMatch: (matchId: number) 
             ) : filteredMatches.length > 0 ? (
               <div className="space-y-3">
                 {filteredMatches.map((match) => (
-                  <MatchCard 
-                    key={match.id} 
-                    match={match} 
+                  <MatchCard
+                    key={match.id}
+                    match={match}
                     onClick={onSelectMatch}
                   />
                 ))}
