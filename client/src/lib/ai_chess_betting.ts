@@ -2,7 +2,7 @@ export const IDL = {
 	"version": "0.1.0",
 	"instructions": [
 		{
-			"name": "initialize",
+			"name/home/user/chess/server": "initialize",
 			"accounts": [
 				{ "name": "programState", "isMut": true, "isSigner": true },
 				{ "name": "authority", "isMut": true, "isSigner": true },
