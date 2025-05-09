@@ -1,23 +1,3 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Chess, Move } from "chess.js";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/api";
-import { useToast } from "./use-toast";
-import { BetPools } from "@/lib/types";
-
-export function useChessMatch(matchId: number) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [game, setGame] = useState<Chess>(new Chess());
-  const [moveHistory, setMoveHistory] = useState<string[]>([]);
-  const [status, setStatus] = useState<string | null>("inProgress");
-  const [lastMove, setLastMove] = useState<Move | null>(null);
-  const [currentMove, setCurrentMove] = useState(0);
-  const [timers, setTimers] = useState({ white: 300, black: 300 }); // 5 minutes fixed for each player
-  const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [timeControl, setTimeControl] = useState("5+0"); // 5 minutes fixed for the display
-  const [increment, setIncrement] = useState(0);
-  // const [increment, setIncimport { useState, useEffect, useCallback, useRef } from "react";
 import { Chess, Move } from "chess.js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api";
