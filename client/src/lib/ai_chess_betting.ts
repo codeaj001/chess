@@ -1,6 +1,5 @@
-export default {
+export const IDL = {
 	"version": "0.1.0",
-	"name": "ai_chess_betting",
 	"instructions": [
 		{
 			"name": "initialize",
@@ -233,3 +232,5 @@ export default {
 		}
 	]
 }
+
+export type AiChessBetting = typeof IDL;
