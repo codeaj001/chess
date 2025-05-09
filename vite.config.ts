@@ -32,4 +32,17 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@solana/spl-token'],
   },
+  esbuildOptions: {
+    plugins: [
+      {
+        name: 'bn.js-fix',
+        setup(build) {
+          build.onLoad({ filter: /bn.js\/lib\/bn\.js/ }, async (args) => {
+            const contents = await require('fs').promises.readFile(args.path, 'utf8');
+            return { contents: contents.replace('module.exports = BN;', 'export default BN;'), loader: 'js' };
+          });
+        },
+      },
+    ],
+  },
 });
