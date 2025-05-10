@@ -188,7 +188,7 @@ export function BettingPanel({ match }: BettingPanelProps) {
 					title: "Potential Payout",
 					description: `If ${selectedOutcome} wins, you'll receive approximately ${potentialPayout.toFixed(
 						2
-					)} SOL`,
+					)} SOL`
 				});
 
 				// Refresh balance after placing bet
@@ -571,7 +571,62 @@ export function BettingPanel({ match }: BettingPanelProps) {
 
 				{/* Direct transaction test button */}
 				<Button
-					className=\"w-full mt-2 bg-blue-700 hover:bg-blue-600 transition\"\n\t\t\t\t\tonClick={async () => {\n\t\t\t\t\t\tif (!connected || !walletProvider) {\n\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\ttitle: \"Wallet not connected\",\n\t\t\t\t\t\t\t\tdescription: \"Please connect your wallet first\",\n\t\t\t\t\t\t\t\tvariant: \"destructive\",\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\ttitle: \"Testing Direct Transaction\",\n\t\t\t\t\t\t\tdescription:\n\t\t\t\t\t\t\t\t\"Requesting wallet approval for a small transaction\",\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\t// Test with a very small amount (0.001 SOL)\n\t\t\t\t\t\t\tconst signature = await sendSolanaTransaction(\n\t\t\t\t\t\t\t\t0.001,\n\t\t\t\t\t\t\t\twalletProvider,\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tonStart: () =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\"Test transaction started\"),\n\t\t\t\t\t\t\t\t\tonApproval: () =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction approved\"\n\t\t\t\t\t\t\t\t\t\t),\n\t\t\t\t\t\t\t\t\tonSent: (sig) =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction sent:\",\n\t\t\t\t\t\t\t\t\t\t\tsig\n\t\t\t\t\t\t\t\t\t\t),\n\t\t\t\t\t\t\t\t\tonConfirmed: (sig) => {\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction confirmed:\",\n\t\t\t\t\t\t\t\t\t\t\tsig\n\t\t\t\t\t\t\t\t\t\t);\n\t\t\t\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\t\t\t\ttitle: \"Transaction Successful\",\n\t\t\t\t\t\t\t\t\t\t\tdescription:\n\t\t\t\t\t\t\t\t\t\t\t\t\"Your wallet is working correctly!\",\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\tonError: (err) => {\n\t\t\t\t\t\t\t\t\t\tconsole.error(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction error:\",\n\t\t\t\t\t\t\t\t\t\t\terr\n\t\t\t\t\t\t\t\t\t\t);\n\t\t\t\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\t\t\t\ttitle: \"Transaction Failed\",\n\t\t\t\t\t\t\t\t\t\t\tdescription: err.message,\n\t\t\t\t\t\t\t\t\t\t\tvariant: \"destructive\",\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t);\n\t\t\t\t\t\t} catch (error) {\n\t\t\t\t\t\t\tconsole.error(\"Test transaction error:\", error);\n\t\t\t\t\t\t}\n\t\t\t\t\t}}\n\t\t\t\t\tdisabled={!connected}\n\t\t\t\t>\n\t\t\t\t\tTest Direct Transaction\n\t\t\t\t</Button>\n\n\t\t\t\t<div className=\"text-xs text-gray-400 mt-4\">\n\t\t\t\t\tNote: This is a development environment. SOL tokens have no\n\t\t\t\t\treal value and are only for testing purposes.\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t);\n}\n", "status": "succeeded"}}
+					className="w-full mt-2 bg-blue-700 hover:bg-blue-600 transition"
+					onClick={async () => {
+						if (!connected || !walletProvider) {
+							toast({
+								title: "Wallet not connected",
+								description: "Please connect your wallet first",
+								variant: "destructive",
+							});
+							return;
+						}
+
+						toast({
+							title: "Testing Direct Transaction",
+							description:
+								"Requesting wallet approval for a small transaction",
+						});
+
+						try {
+							// Test with a very small amount (0.001 SOL)
+							const signature = await placeBet(
+								match.id, // Use the match prop's ID
+								selectedOutcome, // This might not be relevant for a simple SOL transfer, adjust as needed
+								0.001, // Test amount
+								walletProvider,
+								{
+									onApprovalRequest: () => console.log("Test transaction approval requested"),
+									onApproval: () => console.log("Test transaction approved"),
+									onConfirming: () => console.log("Test transaction confirming"),
+									onSuccess: (sig) => {
+										console.log("Test transaction confirmed:", sig);
+										toast({
+											title: "Transaction Successful",
+											description:
+												"Your wallet is working correctly!",
+										});
+									},
+									onError: (err) => {
+										console.error("Test transaction error:", err);
+										toast({
+											title: "Transaction Failed",
+											description: err.message,
+											variant: "destructive",
+										});
+									},
+								}
+							);
+						} catch (error) {
+							console.error("Test transaction error:", error);
+						}
+					}}
+					disabled={!connected}
+				>
+					Test Direct Transaction
+				</Button>
+
+				<div className="text-xs text-gray-400 mt-4">
 					Note: This is a development environment. SOL tokens have no
 					real value and are only for testing purposes.
 				</div>
