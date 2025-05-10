@@ -5,11 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useChessMatch } from "@/hooks/useChessMatch";
 import { Match, BetOutcome } from "@/lib/types";
-import { placeBet, airdropSol } from "@/lib/solana";
-import {
-	sendSolanaTransaction,
-	isValidWalletProvider,
-} from "@/lib/direct-wallet";
+import { placeBet, airdropSol,  } from "@/lib/solana";
 import {
 	AlertTriangle,
 	Info,
@@ -32,10 +28,8 @@ export function BettingPanel({ match }: BettingPanelProps) {
 		network,
 	} = useSolanaWallet();
 	const { betPools, isMatchLocked } = useChessMatch(match.id);
-
-	const [selectedOutcome, setSelectedOutcome] = useState<BetOutcome | null>(
-		null
-	);
+	
+	const [selectedOutcome, setSelectedOutcome] = useState<BetOutcome | null>(null);
 	const [betAmount, setBetAmount] = useState<string>("0.5");
 	const [isPlacingBet, setIsPlacingBet] = useState(false);
 	const [isAirdropping, setIsAirdropping] = useState(false);
@@ -127,20 +121,6 @@ export function BettingPanel({ match }: BettingPanelProps) {
 			return;
 		}
 
-		// Check if wallet provider is valid
-		if (!isValidWalletProvider(walletProvider)) {
-			toast({
-				title: "Wallet not compatible",
-				description:
-					"Your wallet doesn't support the required transaction methods. Please try a different wallet.",
-				variant: "destructive",
-			});
-			return;
-		}
-
-		setIsPlacingBet(true);
-		setTransactionStatus("approval");
-
 		// Show toast immediately to indicate user should check their wallet
 		toast({
 			title: "Approval Required",
@@ -148,44 +128,29 @@ export function BettingPanel({ match }: BettingPanelProps) {
 		});
 
 		try {
-			// Use direct wallet transaction approach
-			const signature = await sendSolanaTransaction(
+			setIsPlacingBet(true);
+			setTransactionStatus("approval");
+
+			// Call the placeBet function from solana.ts
+			const signature = await placeBet(
+				match.id, // Use the match prop's ID
+				selectedOutcome,
 				betAmountNumber,
 				walletProvider,
 				{
-					onStart: () => {
-						setTransactionStatus("approval");
-						console.log(
-							"Transaction started, waiting for approval..."
-						);
+					onApprovalRequest: () => {
+						setTransactionStatus("approval"); // Keep approval status
 					},
 					onApproval: () => {
 						setTransactionStatus("approved");
-						toast({
-							title: "Transaction Approved",
-							description: "Your transaction is being processed",
-						});
 						console.log("Transaction approved by user");
 					},
-					onSent: (txSignature) => {
+					onConfirming: () => {
 						setTransactionStatus("confirming");
-						toast({
-							title: "Transaction Sent",
-							description: "Waiting for blockchain confirmation",
-						});
-						console.log(
-							"Transaction sent to network:",
-							txSignature
-						);
 					},
-					onConfirmed: (txSignature) => {
+					onSuccess: (txSignature) => { // Assuming placeBet has onSuccess callback
 						setTransactionStatus("success");
-						console.log("Transaction confirmed:", txSignature);
-					},
-					onError: (error) => {
-						setTransactionStatus("error");
-						setTransactionError(error.message);
-						console.error("Transaction error:", error);
+						// Handle success, e.g., show success toast, record bet
 					},
 				}
 			);
@@ -606,74 +571,7 @@ export function BettingPanel({ match }: BettingPanelProps) {
 
 				{/* Direct transaction test button */}
 				<Button
-					className="w-full mt-2 bg-blue-700 hover:bg-blue-600 transition"
-					onClick={async () => {
-						if (!connected || !walletProvider) {
-							toast({
-								title: "Wallet not connected",
-								description: "Please connect your wallet first",
-								variant: "destructive",
-							});
-							return;
-						}
-
-						toast({
-							title: "Testing Direct Transaction",
-							description:
-								"Requesting wallet approval for a small transaction",
-						});
-
-						try {
-							// Test with a very small amount (0.001 SOL)
-							const signature = await sendSolanaTransaction(
-								0.001,
-								walletProvider,
-								{
-									onStart: () =>
-										console.log("Test transaction started"),
-									onApproval: () =>
-										console.log(
-											"Test transaction approved"
-										),
-									onSent: (sig) =>
-										console.log(
-											"Test transaction sent:",
-											sig
-										),
-									onConfirmed: (sig) => {
-										console.log(
-											"Test transaction confirmed:",
-											sig
-										);
-										toast({
-											title: "Transaction Successful",
-											description:
-												"Your wallet is working correctly!",
-										});
-									},
-									onError: (err) => {
-										console.error(
-											"Test transaction error:",
-											err
-										);
-										toast({
-											title: "Transaction Failed",
-											description: err.message,
-											variant: "destructive",
-										});
-									},
-								}
-							);
-						} catch (error) {
-							console.error("Test transaction error:", error);
-						}
-					}}
-					disabled={!connected}
-				>
-					Test Direct Transaction
-				</Button>
-
-				<div className="text-xs text-gray-400 mt-4">
+					className=\"w-full mt-2 bg-blue-700 hover:bg-blue-600 transition\"\n\t\t\t\t\tonClick={async () => {\n\t\t\t\t\t\tif (!connected || !walletProvider) {\n\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\ttitle: \"Wallet not connected\",\n\t\t\t\t\t\t\t\tdescription: \"Please connect your wallet first\",\n\t\t\t\t\t\t\t\tvariant: \"destructive\",\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\ttitle: \"Testing Direct Transaction\",\n\t\t\t\t\t\t\tdescription:\n\t\t\t\t\t\t\t\t\"Requesting wallet approval for a small transaction\",\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\t// Test with a very small amount (0.001 SOL)\n\t\t\t\t\t\t\tconst signature = await sendSolanaTransaction(\n\t\t\t\t\t\t\t\t0.001,\n\t\t\t\t\t\t\t\twalletProvider,\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tonStart: () =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\"Test transaction started\"),\n\t\t\t\t\t\t\t\t\tonApproval: () =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction approved\"\n\t\t\t\t\t\t\t\t\t\t),\n\t\t\t\t\t\t\t\t\tonSent: (sig) =>\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction sent:\",\n\t\t\t\t\t\t\t\t\t\t\tsig\n\t\t\t\t\t\t\t\t\t\t),\n\t\t\t\t\t\t\t\t\tonConfirmed: (sig) => {\n\t\t\t\t\t\t\t\t\t\tconsole.log(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction confirmed:\",\n\t\t\t\t\t\t\t\t\t\t\tsig\n\t\t\t\t\t\t\t\t\t\t);\n\t\t\t\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\t\t\t\ttitle: \"Transaction Successful\",\n\t\t\t\t\t\t\t\t\t\t\tdescription:\n\t\t\t\t\t\t\t\t\t\t\t\t\"Your wallet is working correctly!\",\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\tonError: (err) => {\n\t\t\t\t\t\t\t\t\t\tconsole.error(\n\t\t\t\t\t\t\t\t\t\t\t\"Test transaction error:\",\n\t\t\t\t\t\t\t\t\t\t\terr\n\t\t\t\t\t\t\t\t\t\t);\n\t\t\t\t\t\t\t\t\t\ttoast({\n\t\t\t\t\t\t\t\t\t\t\ttitle: \"Transaction Failed\",\n\t\t\t\t\t\t\t\t\t\t\tdescription: err.message,\n\t\t\t\t\t\t\t\t\t\t\tvariant: \"destructive\",\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t);\n\t\t\t\t\t\t} catch (error) {\n\t\t\t\t\t\t\tconsole.error(\"Test transaction error:\", error);\n\t\t\t\t\t\t}\n\t\t\t\t\t}}\n\t\t\t\t\tdisabled={!connected}\n\t\t\t\t>\n\t\t\t\t\tTest Direct Transaction\n\t\t\t\t</Button>\n\n\t\t\t\t<div className=\"text-xs text-gray-400 mt-4\">\n\t\t\t\t\tNote: This is a development environment. SOL tokens have no\n\t\t\t\t\treal value and are only for testing purposes.\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t);\n}\n", "status": "succeeded"}}
 					Note: This is a development environment. SOL tokens have no
 					real value and are only for testing purposes.
 				</div>
